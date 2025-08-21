@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Gallery - Lifeline Church Atlanta</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <header class="navbar">
+        <div class="container navbar-container">
+            <div class="navbar-left">
+                <img src="icons/logo.jpg" alt="Lifeline Church Logo" loading="lazy" class="logo">
+                <a href="index.html" class="navbar-title">Lifeline Church</a>
+            </div>
+            <nav class="navbar-right">
+                <a href="index.html#map" class="nav-link">Location</a>
+                <a href="index.html#about-us" class="nav-link">About Us</a>
+                <a href="index.html#photos" class="nav-link">Photos</a>
+                <a href="index.html#events" class="nav-link">Schedule</a>
+                <a href="index.html#ministries" class="nav-link">Ministries</a>
+                <a href="index.html#give" class="nav-link">Give</a>
+            </nav>
+            <div class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </header>
+
+    <section class="photo-page-header">
+        <div class="container">
+            <a href="index.html#photos" class="back-link"><i class="fas fa-arrow-left"></i> Back to Main Gallery</a>
+            <h1 id="folder-name"></h1>
+        </div>
+    </section>
+
+    <main class="gallery-main">
+        <div class="photo-gallery-grid" id="photo-container"></div>
+    </main>
+
+    <div id="fullscreenModal" class="fullscreen-modal">
+        <span class="close-btn">&times;</span>
+        <span class="nav-arrow prev">&#10094;</span>
+        <img id="fullscreenImage" class="fullscreen-image" src="" alt="Fullscreen Image">
+        <span class="nav-arrow next">&#10095;</span>
+    </div>
+
+    <footer class="footer">
+        <div class="container footer-container">
+            <div class="footer-info">
+                <p>© 2025 Lifeline Church Atlanta. All Rights Reserved.</p>
+                <p>829 Atlanta Highway, Cumming, GA 30040</p>
+            </div>
+            <div class="footer-social">
+                <a href="https://facebook.com" target="_blank" class="social-icon" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://instagram.com" target="_blank" class="social-icon" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="https://youtube.com" target="_blank" class="social-icon" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                <a href="mailto:connect@lifelinechurch.com" class="social-icon" aria-label="Email"><i class="fas fa-envelope"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const photoCategories = {
+            'Worship Services': { folder: 'cat1', fileCount: 2 }, 
+            'Community Events': { folder: 'cat2', fileCount: 2 }, 
+            'Youth Activities': { folder: 'cat3', fileCount: 2 }, 
+        };
+
+        let currentIndex = 0;
+        let imagePaths = [];
+
+        const elements = {
+            photoContainer: document.getElementById('photo-container'),
+            folderNameHeader: document.getElementById('folder-name'),
+            modal: document.getElementById('fullscreenModal'),
+            fullscreenImage: document.getElementById('fullscreenImage'),
+            closeBtn: document.querySelector('.close-btn'),
+            prevBtn: document.querySelector('.prev'),
+            nextBtn: document.querySelector('.next')
+        };
+
+        function initializeGallery() {
+            const categoryName = new URLSearchParams(window.location.search).get('name');
+            const categoryData = photoCategories[categoryName];
+
+            elements.folderNameHeader.textContent = categoryName || 'Gallery';
+
+            if (!categoryData) {
+                elements.photoContainer.innerHTML = '<p>Photo category not found. Please return to the main gallery.</p>';
+                return;
+            }
+
+            imagePaths = Array.from({ length: categoryData.fileCount }, (_, i) => 
+                `photos/${categoryData.folder}/${i + 1}.jpg`
+            );
+
+            const images = imagePaths.map((src, index) => {
+                const img = document.createElement('img');
+                img.src = src;
+                img.alt = `${categoryName} photo ${index + 1}`;
+                img.loading = 'lazy';
+                img.addEventListener('click', () => openFullscreen(index));
+                return img;
+            });
+
+            elements.photoContainer.append(...images);
+        }
+
+        function openFullscreen(index) {
+            currentIndex = index;
+            elements.fullscreenImage.src = imagePaths[currentIndex];
+            elements.modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeFullscreen() {
+            elements.modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function changeImage(direction) {
+            currentIndex = direction === 'next' 
+                ? (currentIndex + 1) % imagePaths.length 
+                : (currentIndex - 1 + imagePaths.length) % imagePaths.length;
+            elements.fullscreenImage.src = imagePaths[currentIndex];
+        }
+
+        elements.closeBtn.addEventListener('click', closeFullscreen);
+        elements.nextBtn.addEventListener('click', (e) => { e.stopPropagation(); changeImage('next'); });
+        elements.prevBtn.addEventListener('click', (e) => { e.stopPropagation(); changeImage('prev'); });
+
+        elements.modal.addEventListener('click', (e) => {
+            if (e.target === elements.modal) closeFullscreen();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (elements.modal.style.display === 'flex') {
+                if (e.key === 'Escape') closeFullscreen();
+                if (e.key === 'ArrowRight') changeImage('next');
+                if (e.key === 'ArrowLeft') changeImage('prev');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', initializeGallery);
+    </script>
+</body>
+</html>
